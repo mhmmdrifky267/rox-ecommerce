@@ -41,19 +41,19 @@ model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
-  password      String? // nullable karena login via Google tidak punya password
+  password      String?   // nullable karena login via Google tidak punya password
   emailVerified DateTime?
   avatar        String?
   role          Role      @default(BUYER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  addresses Address[]
-  seller    Seller?
-  cart      Cart?
-  wishlist  Wishlist[]
-  orders    Order[]
-  reviews   Review[]
+  addresses     Address[]
+  seller        Seller?
+  cart          Cart?
+  wishlist      Wishlist[]
+  orders        Order[]
+  reviews       Review[]
 
   @@map("users")
 }
@@ -62,7 +62,7 @@ model Address {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  label       String // contoh: "Rumah", "Kantor"
+  label       String   // contoh: "Rumah", "Kantor"
   recipient   String
   phone       String
   fullAddress String
@@ -71,7 +71,7 @@ model Address {
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  orders Order[]
+  orders      Order[]
 
   @@map("addresses")
 }
@@ -79,14 +79,14 @@ model Address {
 // ==================== SELLER & PRODUCT ====================
 
 model Seller {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   storeName   String
   storeLogo   String?
   description String?
-  isApproved  Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isApproved  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
 
   // Alamat asal pengiriman — dibutuhkan untuk hitung ongkir via Biteship.
   // postalCode WAJIB diisi sebelum seller bisa menjual (dicek di validasi),
@@ -95,7 +95,8 @@ model Seller {
   storeCity       String?
   storePostalCode String?
 
-  products Product[]
+  products    Product[]
+  orders      Order[]
 
   @@map("sellers")
 }
@@ -122,16 +123,16 @@ model Product {
   name        String
   slug        String   @unique
   description String
-  price       Int // simpan dalam rupiah (integer), hindari float untuk uang
+  price       Int      // simpan dalam rupiah (integer), hindari float untuk uang
   weight      Int      @default(500) // berat dalam GRAM — dipakai untuk hitung ongkir
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  images       ProductImage[]
-  variants     ProductVariant[]
+  images      ProductImage[]
+  variants    ProductVariant[]
   wishlistedBy Wishlist[]
-  reviews      Review[]
+  reviews     Review[]
 
   @@map("products")
 }
@@ -197,18 +198,24 @@ model Wishlist {
 // ==================== ORDER & PAYMENT ====================
 
 model Order {
-  id         String      @id @default(cuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id])
-  addressId  String
-  address    Address     @relation(fields: [addressId], references: [id])
-  status     OrderStatus @default(PENDING)
-  totalPrice Int
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  sellerId       String
+  seller         Seller      @relation(fields: [sellerId], references: [id])
+  addressId      String
+  address        Address     @relation(fields: [addressId], references: [id])
+  status         OrderStatus @default(PENDING)
+  itemsTotal     Int         // subtotal harga produk (sebelum ongkir)
+  shippingCost   Int         @default(0)
+  totalPrice     Int         // itemsTotal + shippingCost
+  courierName    String?
+  courierService String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  items   OrderItem[]
-  payment Payment?
+  items      OrderItem[]
+  payment    Payment?
 
   @@map("orders")
 }
@@ -220,7 +227,7 @@ model OrderItem {
   productVariantId String
   variant          ProductVariant @relation(fields: [productVariantId], references: [id])
   qty              Int
-  priceAtOrder     Int // snapshot harga saat transaksi
+  priceAtOrder     Int            // snapshot harga saat transaksi
 
   @@map("order_items")
 }
@@ -229,7 +236,7 @@ model Payment {
   id            String        @id @default(cuid())
   orderId       String        @unique
   order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  method        String // "midtrans", "bank_transfer", dst
+  method        String        // "midtrans", "bank_transfer", dst
   status        PaymentStatus @default(PENDING)
   transactionId String?
   paidAt        DateTime?
@@ -246,7 +253,7 @@ model Review {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rating    Int // 1-5
+  rating    Int      // 1-5
   comment   String?
   createdAt DateTime @default(now())
 

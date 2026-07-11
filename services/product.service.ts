@@ -227,8 +227,27 @@ export async function getSellerProfile(sellerId: string) {
       storeName: true,
       storeLogo: true,
       description: true,
+      storeAddress: true,
+      storeCity: true,
+      storePostalCode: true,
       createdAt: true,
       _count: { select: { products: true } },
     },
+  });
+}
+
+export async function updateSellerProfile(
+  sellerId: string,
+  data: {
+    storeName: string;
+    description?: string;
+    storeAddress: string;
+    storeCity: string;
+    storePostalCode: string;
+  }
+) {
+  return prisma.seller.update({
+    where: { id: sellerId },
+    data,
   });
 }

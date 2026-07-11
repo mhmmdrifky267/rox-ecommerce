@@ -208,9 +208,14 @@ export type WishlistScalarFieldEnum = (typeof WishlistScalarFieldEnum)[keyof typ
 export const OrderScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  sellerId: 'sellerId',
   addressId: 'addressId',
   status: 'status',
+  itemsTotal: 'itemsTotal',
+  shippingCost: 'shippingCost',
   totalPrice: 'totalPrice',
+  courierName: 'courierName',
+  courierService: 'courierService',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

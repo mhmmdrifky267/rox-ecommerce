@@ -80,15 +80,32 @@ export function Navbar() {
                       Profil Saya
                     </Link>
 
+                    <Link
+                      href="/orders"
+                      className="block px-4 py-2 text-sm hover:bg-gray-50"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      Pesanan Saya
+                    </Link>
+
                     {session.user.role === "SELLER" && (
-                      <Link
-                        href="/dashboard/products"
-                        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setProfileOpen(false)}
-                      >
-                        <LayoutDashboard className="h-4 w-4" />
-                        Dashboard Toko
-                      </Link>
+                      <>
+                        <Link
+                          href="/dashboard/products"
+                          className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          Dashboard Toko
+                        </Link>
+                        <Link
+                          href="/dashboard/profile"
+                          className="block px-4 py-2 text-sm hover:bg-gray-50"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          Profil Toko
+                        </Link>
+                      </>
                     )}
 
                     <button

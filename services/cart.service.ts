@@ -19,7 +19,10 @@ export async function getCartWithDetails(userId: string) {
       variant: {
         include: {
           product: {
-            include: { images: { where: { isPrimary: true }, take: 1 } },
+            include: {
+              images: { where: { isPrimary: true }, take: 1 },
+              seller: { select: { id: true, storeName: true } },
+            },
           },
         },
       },
@@ -108,4 +111,43 @@ export async function removeCartItem(userId: string, itemId: string) {
   if (!item) throw new Error("Item tidak ditemukan di cart kamu");
 
   return prisma.cartItem.delete({ where: { id: itemId } });
+}
+
+// Dikelompokkan per toko — dipakai khusus di halaman checkout, karena
+// ongkir dan Order dihitung per toko (lihat penjelasan Tahap 7), bukan
+// sekali untuk seluruh cart.
+export async function getCartGroupedBySeller(userId: string) {
+  const { items } = await getCartWithDetails(userId);
+
+  const groups = new Map<
+    string,
+    {
+      sellerId: string;
+      storeName: string;
+      items: typeof items;
+      itemsTotal: number;
+      totalWeight: number;
+    }
+  >();
+
+  for (const item of items) {
+    const sellerId = item.variant.product.sellerId;
+
+    if (!groups.has(sellerId)) {
+      groups.set(sellerId, {
+        sellerId,
+        storeName: item.variant.product.seller.storeName,
+        items: [],
+        itemsTotal: 0,
+        totalWeight: 0,
+      });
+    }
+
+    const group = groups.get(sellerId)!;
+    group.items.push(item);
+    group.itemsTotal += item.variant.product.price * item.qty;
+    group.totalWeight += item.variant.product.weight * item.qty;
+  }
+
+  return Array.from(groups.values());
 }
