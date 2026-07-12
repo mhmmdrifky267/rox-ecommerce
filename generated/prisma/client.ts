@@ -107,6 +107,11 @@ export type OrderItem = Prisma.OrderItemModel
  */
 export type Payment = Prisma.PaymentModel
 /**
+ * Model ProductView
+ * 
+ */
+export type ProductView = Prisma.ProductViewModel
+/**
  * Model Review
  * 
  */

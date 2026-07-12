@@ -35,6 +35,9 @@ export async function POST(request: Request) {
             email: session.user.email ?? undefined,
             first_name: session.user.name ?? undefined,
           },
+          // Opsional: batasi metode pembayaran yang muncul di popup Snap.
+          // Kalau tidak diisi (default), SEMUA metode aktif akan ditampilkan.
+          // enabled_payments: ["bank_transfer", "gopay", "shopeepay", "qris"],
         });
 
         // Simpan record Payment berstatus PENDING, menunggu webhook Midtrans

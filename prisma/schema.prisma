@@ -54,6 +54,7 @@ model User {
   wishlist      Wishlist[]
   orders        Order[]
   reviews       Review[]
+  productViews  ProductView[]
 
   @@map("users")
 }
@@ -133,6 +134,7 @@ model Product {
   variants    ProductVariant[]
   wishlistedBy Wishlist[]
   reviews     Review[]
+  views       ProductView[]
 
   @@map("products")
 }
@@ -243,6 +245,22 @@ model Payment {
   createdAt     DateTime      @default(now())
 
   @@map("payments")
+}
+
+// ==================== RIWAYAT LIHAT (untuk rekomendasi) ====================
+
+model ProductView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  // Satu user - satu produk cuma satu baris. Kalau dilihat lagi, kita
+  // UPDATE viewedAt-nya (lihat service), bukan bikin baris baru terus-terusan.
+  @@unique([userId, productId])
+  @@map("product_views")
 }
 
 // ==================== REVIEW ====================

@@ -113,3 +113,100 @@ export async function getUserOrders(userId: string) {
     orderBy: { createdAt: "desc" },
   });
 }
+
+// ==================== SISI SELLER ====================
+
+export async function getSellerOrders(sellerId: string) {
+  return prisma.order.findMany({
+    where: { sellerId },
+    include: {
+      items: {
+        include: {
+          variant: {
+            include: {
+              product: { include: { images: { where: { isPrimary: true }, take: 1 } } },
+            },
+          },
+        },
+      },
+      address: true,
+      user: { select: { name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+// Transisi status yang diizinkan — seller cuma bisa maju satu langkah,
+// tidak bisa "loncat" status atau mundur. CANCELLED bisa terjadi dari
+// mana saja SEBELUM SHIPPED (misal stok ternyata bermasalah).
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  PAID: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["COMPLETED"],
+};
+
+export async function updateOrderStatus(
+  orderId: string,
+  sellerId: string,
+  newStatus: string
+) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, sellerId },
+  });
+  if (!order) throw new Error("Pesanan tidak ditemukan");
+
+  const allowedNext = ALLOWED_TRANSITIONS[order.status] ?? [];
+  if (!allowedNext.includes(newStatus)) {
+    throw new Error(
+      `Tidak bisa ubah status dari ${order.status} ke ${newStatus}`
+    );
+  }
+
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { status: newStatus as never },
+  });
+}
+
+export async function getSellerStats(sellerId: string) {
+  const [orderStats, bestSellingVariant] = await Promise.all([
+    // Total pendapatan & jumlah pesanan — cuma hitung yang statusnya
+    // sudah PAID ke atas (bukan yang masih PENDING/CANCELLED)
+    prisma.order.aggregate({
+      where: {
+        sellerId,
+        status: { in: ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] },
+      },
+      _sum: { totalPrice: true },
+      _count: true,
+    }),
+    prisma.orderItem.groupBy({
+      by: ["productVariantId"],
+      where: {
+        order: {
+          sellerId,
+          status: { in: ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] },
+        },
+      },
+      _sum: { qty: true },
+      orderBy: { _sum: { qty: "desc" } },
+      take: 1,
+    }),
+  ]);
+
+  let bestSellingProductName: string | null = null;
+  if (bestSellingVariant.length > 0) {
+    const variant = await prisma.productVariant.findUnique({
+      where: { id: bestSellingVariant[0].productVariantId },
+      include: { product: { select: { name: true } } },
+    });
+    bestSellingProductName = variant?.product.name ?? null;
+  }
+
+  return {
+    totalRevenue: orderStats._sum.totalPrice ?? 0,
+    totalOrders: orderStats._count,
+    bestSellingProductName,
+    bestSellingQty: bestSellingVariant[0]?._sum.qty ?? 0,
+  };
+}

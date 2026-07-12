@@ -91,7 +91,7 @@ export function Navbar() {
                     {session.user.role === "SELLER" && (
                       <>
                         <Link
-                          href="/dashboard/products"
+                          href="/dashboard"
                           className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
                           onClick={() => setProfileOpen(false)}
                         >

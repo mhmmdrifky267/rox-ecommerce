@@ -28,6 +28,7 @@ declare module "midtrans-client" {
       quantity: number;
       name: string;
     }>;
+    enabled_payments?: string[];
   };
 
   type TransactionResult = {

@@ -397,6 +397,7 @@ export const ModelName = {
   Order: 'Order',
   OrderItem: 'OrderItem',
   Payment: 'Payment',
+  ProductView: 'ProductView',
   Review: 'Review'
 } as const
 
@@ -413,7 +414,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "seller" | "category" | "product" | "productImage" | "productVariant" | "cart" | "cartItem" | "wishlist" | "order" | "orderItem" | "payment" | "review"
+    modelProps: "user" | "address" | "seller" | "category" | "product" | "productImage" | "productVariant" | "cart" | "cartItem" | "wishlist" | "order" | "orderItem" | "payment" | "productView" | "review"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1379,6 +1380,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ProductView: {
+      payload: Prisma.$ProductViewPayload<ExtArgs>
+      fields: Prisma.ProductViewFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProductViewFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProductViewFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>
+        }
+        findFirst: {
+          args: Prisma.ProductViewFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProductViewFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>
+        }
+        findMany: {
+          args: Prisma.ProductViewFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>[]
+        }
+        create: {
+          args: Prisma.ProductViewCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>
+        }
+        createMany: {
+          args: Prisma.ProductViewCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProductViewCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>[]
+        }
+        delete: {
+          args: Prisma.ProductViewDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>
+        }
+        update: {
+          args: Prisma.ProductViewUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProductViewDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProductViewUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProductViewUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProductViewUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductViewPayload>
+        }
+        aggregate: {
+          args: Prisma.ProductViewAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProductView>
+        }
+        groupBy: {
+          args: Prisma.ProductViewGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductViewGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProductViewCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductViewCountAggregateOutputType> | number
+        }
+      }
+    }
     Review: {
       payload: Prisma.$ReviewPayload<ExtArgs>
       fields: Prisma.ReviewFieldRefs
@@ -1656,6 +1731,16 @@ export const PaymentScalarFieldEnum = {
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
 
 
+export const ProductViewScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  productId: 'productId',
+  viewedAt: 'viewedAt'
+} as const
+
+export type ProductViewScalarFieldEnum = (typeof ProductViewScalarFieldEnum)[keyof typeof ProductViewScalarFieldEnum]
+
+
 export const ReviewScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1925,6 +2010,7 @@ export type GlobalOmitConfig = {
   order?: Prisma.OrderOmit
   orderItem?: Prisma.OrderItemOmit
   payment?: Prisma.PaymentOmit
+  productView?: Prisma.ProductViewOmit
   review?: Prisma.ReviewOmit
 }
 

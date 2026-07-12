@@ -1,11 +1,16 @@
 // app/(shop)/products/[slug]/page.tsx
 
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import {
   getProductBySlug,
   getRelatedProducts,
   getStoreProducts,
 } from "@/services/product.service";
+import {
+  trackProductView,
+  getFrequentlyBoughtTogether,
+} from "@/services/recommendation.service";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { VariantSelector } from "@/components/product/VariantSelector";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -23,9 +28,17 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  const [relatedProducts, storeProducts] = await Promise.all([
+  // Catat riwayat lihat HANYA kalau user sedang login — pengunjung anonim
+  // dilewati saja, tidak dianggap error.
+  const session = await auth();
+  if (session?.user) {
+    await trackProductView(session.user.id, product.id);
+  }
+
+  const [relatedProducts, storeProducts, boughtTogether] = await Promise.all([
     getRelatedProducts(product.categoryId, product.id),
     getStoreProducts(product.sellerId, product.id),
+    getFrequentlyBoughtTogether(product.id),
   ]);
 
   const avgRating =
@@ -90,6 +103,24 @@ export default async function ProductDetailPage({
                   </p>
                 )}
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ---- Sering Dibeli Bersama ---- */}
+      {boughtTogether.length > 0 && (
+        <div className="mt-12">
+          <h2 className="mb-4 text-lg font-bold">Sering Dibeli Bersama</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {boughtTogether.map((related) => (
+              <ProductCard
+                key={related.id}
+                slug={related.slug}
+                name={related.name}
+                price={related.price}
+                imageUrl={related.images[0]?.url}
+              />
             ))}
           </div>
         </div>

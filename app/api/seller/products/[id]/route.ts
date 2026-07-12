@@ -3,7 +3,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { productSchema } from "@/lib/validations/product";
-import { updateProduct, deleteProduct } from "@/services/product.service";
+import {
+  updateProduct,
+  deleteProduct,
+  getSellerProductById,
+} from "@/services/product.service";
 
 async function requireSeller() {
   const session = await auth();
@@ -11,6 +15,25 @@ async function requireSeller() {
     return null;
   }
   return session.user;
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await requireSeller();
+  if (!user || !user.sellerId) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const product = await getSellerProductById(id, user.sellerId);
+
+  if (!product) {
+    return NextResponse.json({ error: "Produk tidak ditemukan" }, { status: 404 });
+  }
+
+  return NextResponse.json(product);
 }
 
 export async function PATCH(

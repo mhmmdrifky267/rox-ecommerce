@@ -97,6 +97,13 @@ export async function deleteProduct(productId: string, sellerId: string) {
   return prisma.product.delete({ where: { id: productId } });
 }
 
+export async function getSellerProductById(productId: string, sellerId: string) {
+  return prisma.product.findFirst({
+    where: { id: productId, sellerId },
+    include: { images: true, variants: true },
+  });
+}
+
 export async function getSellerProducts(sellerId: string) {
   return prisma.product.findMany({
     where: { sellerId },
