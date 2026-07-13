@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -41,131 +42,129 @@ export default function RegisterPage() {
       return;
     }
 
-    // Setelah register sukses, arahkan ke halaman login
     router.push("/login");
   }
 
   return (
-    <div className="mx-auto max-w-sm py-16">
-      <h1 className="mb-6 text-2xl font-bold">Daftar</h1>
+    <div
+      className="mx-auto flex min-h-[calc(100vh-64px)] max-w-sm flex-col justify-center px-6 py-10"
+      style={{ background: "var(--canvas)" }}
+    >
+      <Link href="/" className="wordmark mb-8">
+        R.O.X.
+        <small>MARKETPLACE FASHION</small>
+      </Link>
 
-      {/* Pilihan daftar sebagai Buyer atau Seller */}
-      <div className="mb-6 flex rounded-md border">
+      <p className="font-display mb-1 text-[22px] font-extrabold">Buat akun</p>
+      <p className="mb-6 text-[12.5px]" style={{ color: "var(--gray)" }}>
+        Daftar sebagai pembeli atau penjual.
+      </p>
+
+      {/* Pilihan role pakai gaya "tag" — konsisten dengan filter chip di katalog */}
+      <div className="mb-6 flex gap-2">
         <button
           type="button"
           onClick={() => setRole("BUYER")}
-          className={`flex-1 py-2 text-sm ${
-            role === "BUYER" ? "bg-black text-white" : "bg-white"
-          }`}
+          className={role === "BUYER" ? "tag" : "tag tag-ghost"}
         >
-          Sebagai Pembeli
+          Pembeli
         </button>
         <button
           type="button"
           onClick={() => setRole("SELLER")}
-          className={`flex-1 py-2 text-sm ${
-            role === "SELLER" ? "bg-black text-white" : "bg-white"
-          }`}
+          className={role === "SELLER" ? "tag" : "tag tag-ghost"}
         >
-          Sebagai Penjual
+          Penjual
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Nama</label>
+      <form onSubmit={handleSubmit}>
+        <div className="field">
+          <label>Nama</label>
           <input
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full rounded-md border px-3 py-2"
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium">Email</label>
+        <div className="field">
+          <label>Email</label>
           <input
             type="email"
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full rounded-md border px-3 py-2"
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium">Password</label>
+        <div className="field">
+          <label>Kata Sandi</label>
           <input
             type="password"
             required
             minLength={8}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full rounded-md border px-3 py-2"
           />
         </div>
 
-        {/* Field ini hanya muncul kalau daftar sebagai Seller */}
         {role === "SELLER" && (
           <>
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Nama Toko
-              </label>
+            <div className="field">
+              <label>Nama Toko</label>
               <input
                 required
                 value={form.storeName}
-                onChange={(e) =>
-                  setForm({ ...form, storeName: e.target.value })
-                }
-                className="w-full rounded-md border px-3 py-2"
+                onChange={(e) => setForm({ ...form, storeName: e.target.value })}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Kota Toko
-                </label>
+              <div className="field">
+                <label>Kota Toko</label>
                 <input
                   required
                   value={form.storeCity}
-                  onChange={(e) =>
-                    setForm({ ...form, storeCity: e.target.value })
-                  }
-                  className="w-full rounded-md border px-3 py-2"
+                  onChange={(e) => setForm({ ...form, storeCity: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Kode Pos
-                </label>
+              <div className="field">
+                <label>Kode Pos</label>
                 <input
                   required
-                  placeholder="cth. 40123"
+                  placeholder="40123"
                   value={form.storePostalCode}
                   onChange={(e) =>
                     setForm({ ...form, storePostalCode: e.target.value })
                   }
-                  className="w-full rounded-md border px-3 py-2"
                 />
               </div>
             </div>
-            <p className="-mt-2 text-xs text-gray-500">
-              Kota & kode pos dipakai untuk menghitung ongkos kirim ke pembeli.
+            <p className="-mt-2 mb-4 text-[11px]" style={{ color: "var(--gray)" }}>
+              Dipakai untuk menghitung ongkos kirim ke pembeli.
             </p>
           </>
         )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="mb-4 text-[12.5px]" style={{ color: "var(--stamp-red)" }}>
+            {error}
+          </p>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-black py-2 text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={loading} className="btn btn-primary w-full">
           {loading ? "Memproses..." : "Daftar"}
         </button>
+
+        <hr className="divider-dash" />
+
+        <p className="text-center text-[12.5px]" style={{ color: "var(--gray)" }}>
+          Sudah punya akun?{" "}
+          <Link href="/login" className="font-bold" style={{ color: "var(--ink)" }}>
+            Masuk
+          </Link>
+        </p>
       </form>
     </div>
   );

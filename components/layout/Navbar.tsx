@@ -3,29 +3,53 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart.store";
-import { ShoppingCart, Heart, User, ChevronDown, LayoutDashboard, LogOut } from "lucide-react";
+import { ShoppingBag, Heart, ChevronDown, LayoutDashboard, LogOut } from "lucide-react";
 
 export function Navbar() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const totalItems = useCartStore((state) => state.totalItems);
   const fetchCart = useCartStore((state) => state.fetchCart);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Navbar cuma "menunggu" di halaman BERANDA saat pertama kali dibuka —
+  // supaya hero jadi sambutan pertama yang dilihat user. Di halaman lain
+  // (/products, /cart, dst), navbar langsung tampil tanpa delay sama sekali.
+  const isHomepage = pathname === "/";
+  const [visible, setVisible] = useState(!isHomepage);
+
+  useEffect(() => {
+    // Kalau bukan homepage, `visible` sudah `true` sejak initial state di
+    // atas (lihat useState(!isHomepage)) — effect ini tidak perlu melakukan
+    // apa pun untuk kasus itu.
+    if (!isHomepage) return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    // Disatukan lewat satu setTimeout (delay 0 kalau reduce-motion aktif)
+    // supaya setState SELALU terjadi di dalam callback, bukan langsung di
+    // badan effect — pola yang direkomendasikan React untuk menghindari
+    // cascading render.
+    const delay = prefersReducedMotion ? 0 : 1500;
+    const timer = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // sengaja cuma jalan sekali saat mount, bukan tiap pathname berubah
+
   useEffect(() => {
     if (session?.user) fetchCart();
   }, [session?.user, fetchCart]);
 
-  // Tutup dropdown kalau user klik di luar area dropdown
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
       }
     }
@@ -34,55 +58,73 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-base font-bold sm:text-lg">
+    <header
+      className="sticky top-0 z-40 transition-all duration-700 ease-out"
+      style={{
+        background: "var(--paper)",
+        borderBottom: "1px solid var(--line)",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(-10px)",
+        pointerEvents: visible ? "auto" : "none",
+      }}
+      aria-hidden={!visible}
+    >
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-8">
+        <Link href="/" className="wordmark text-base sm:text-xl">
           R.O.X.
+          <small className="hidden sm:block">MARKETPLACE FASHION</small>
         </Link>
 
-        <nav className="flex items-center gap-3 text-sm sm:gap-5">
-          <Link href="/products">Produk</Link>
+        <nav className="flex items-center gap-3 sm:gap-5">
+          <Link
+            href="/products"
+            className="hidden text-[13px] font-medium sm:inline"
+            style={{ color: "var(--ink)" }}
+          >
+            Produk
+          </Link>
 
           {session?.user ? (
             <>
-              <Link href="/wishlist" aria-label="Wishlist">
-                <Heart className="h-5 w-5" />
+              <Link href="/wishlist" className="icon-btn" aria-label="Wishlist">
+                <Heart className="h-4.5 w-4.5" strokeWidth={1.8} />
               </Link>
 
-              {/* Ikon cart + badge jumlah item */}
-              <Link href="/cart" className="relative" aria-label="Keranjang">
-                <ShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white">
-                    {totalItems}
-                  </span>
-                )}
+              <Link href="/cart" className="icon-btn" aria-label="Keranjang">
+                <ShoppingBag className="h-4.5 w-4.5" strokeWidth={1.8} />
+                {totalItems > 0 && <span className="badge-dot">{totalItems}</span>}
               </Link>
 
-              {/* ---- Section Profil (dropdown) ---- */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setProfileOpen((v) => !v)}
-                  className="flex items-center gap-1"
+                  className="tag tag-ghost"
+                  style={{ paddingLeft: "12px" }}
                 >
-                  <User className="h-5 w-5" />
                   <span className="hidden sm:inline">{session.user.name}</span>
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-3 w-3" />
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 top-8 w-48 rounded-md border bg-white py-1 shadow-md">
+                  <div
+                    className="absolute right-0 top-10 w-48 py-1"
+                    style={{
+                      background: "var(--paper)",
+                      border: "1px solid var(--line)",
+                      borderRadius: "4px",
+                      boxShadow: "0 8px 24px -8px rgba(0,0,0,0.2)",
+                    }}
+                  >
                     <Link
                       href="/profile"
-                      className="block px-4 py-2 text-sm hover:bg-gray-50"
+                      className="block px-4 py-2 text-[13px] hover:bg-black/5"
                       onClick={() => setProfileOpen(false)}
                     >
                       Profil Saya
                     </Link>
-
                     <Link
                       href="/orders"
-                      className="block px-4 py-2 text-sm hover:bg-gray-50"
+                      className="block px-4 py-2 text-[13px] hover:bg-black/5"
                       onClick={() => setProfileOpen(false)}
                     >
                       Pesanan Saya
@@ -90,17 +132,18 @@ export function Navbar() {
 
                     {session.user.role === "SELLER" && (
                       <>
+                        <hr className="divider-dash" style={{ margin: "4px 0" }} />
                         <Link
                           href="/dashboard"
-                          className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+                          className="flex items-center gap-2 px-4 py-2 text-[13px] hover:bg-black/5"
                           onClick={() => setProfileOpen(false)}
                         >
-                          <LayoutDashboard className="h-4 w-4" />
+                          <LayoutDashboard className="h-3.5 w-3.5" />
                           Dashboard Toko
                         </Link>
                         <Link
                           href="/dashboard/profile"
-                          className="block px-4 py-2 text-sm hover:bg-gray-50"
+                          className="block px-4 py-2 text-[13px] hover:bg-black/5"
                           onClick={() => setProfileOpen(false)}
                         >
                           Profil Toko
@@ -108,11 +151,13 @@ export function Navbar() {
                       </>
                     )}
 
+                    <hr className="divider-dash" style={{ margin: "4px 0" }} />
                     <button
                       onClick={() => signOut()}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-[13px]"
+                      style={{ color: "var(--stamp-red)" }}
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-3.5 w-3.5" />
                       Keluar
                     </button>
                   </div>
@@ -121,8 +166,12 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/login">Masuk</Link>
-              <Link href="/register">Daftar</Link>
+              <Link href="/login" className="text-[13px] font-medium">
+                Masuk
+              </Link>
+              <Link href="/register" className="tag">
+                Daftar
+              </Link>
             </>
           )}
         </nav>

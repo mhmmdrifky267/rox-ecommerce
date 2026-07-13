@@ -26,28 +26,32 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      {/* ---- Hero sederhana ---- */}
-      <div className="mb-10 rounded-lg bg-gray-100 px-6 py-12 text-center">
-        <h1 className="text-3xl font-bold">Belanja Fashion Favoritmu</h1>
-        <p className="mt-2 text-gray-600">
-          Temukan produk dari ribuan toko terpercaya
-        </p>
-        <Link
-          href="/products"
-          className="mt-4 inline-block rounded-md bg-black px-6 py-2 text-white"
-        >
-          Mulai Belanja
-        </Link>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
+      {/* ---- Hero sesuai referensi: latar ink, stamp "Musim Baru", tag CTA ---- */}
+      <div
+        className="mb-10 flex flex-col items-start justify-between gap-6 rounded-md px-6 py-9 sm:flex-row sm:items-center sm:px-10 sm:py-12"
+        style={{ background: "var(--ink)", color: "var(--paper)" }}
+      >
+        <div>
+          <span className="stamp" style={{ color: "#fff", borderColor: "#fff", background: "transparent" }}>
+            Musim Baru
+          </span>
+          <p className="font-display mt-3 max-w-md text-[26px] font-black leading-tight sm:text-[34px]">
+            Koleksi Akhir Tahun, Untuk Setiap Gaya.
+          </p>
+          <Link href="/products" className="tag mt-4 inline-flex" style={{ background: "var(--stamp-red)" }}>
+            Belanja Sekarang →
+          </Link>
+        </div>
       </div>
 
-      {/* ---- Kategori cepat ---- */}
+      {/* ---- Kategori cepat, gaya tag-ghost ---- */}
       <div className="mb-10 flex flex-wrap gap-2">
         {categories.map((category) => (
           <Link
             key={category.id}
             href={`/products?category=${category.slug}`}
-            className="rounded-full border px-4 py-1.5 text-sm hover:bg-gray-50"
+            className="tag tag-ghost"
           >
             {category.name}
           </Link>
@@ -57,7 +61,12 @@ export default async function HomePage() {
       {/* ---- Dilihat terakhir (hanya untuk user login yang punya histori) ---- */}
       {recentlyViewed.length > 0 && (
         <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">Dilihat Terakhir</h2>
+          <div className="section-title mb-4">
+            <span>Dilihat Terakhir</span>
+            <Link href="/products" className="see-all">
+              Lihat Semua
+            </Link>
+          </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {recentlyViewed.map((product) => (
               <ProductCard
@@ -74,9 +83,16 @@ export default async function HomePage() {
 
       {/* ---- Produk terlaris ---- */}
       <section>
-        <h2 className="mb-4 text-lg font-bold">Produk Terlaris</h2>
+        <div className="section-title mb-4">
+          <span>Produk Terlaris</span>
+          <Link href="/products" className="see-all">
+            Lihat Semua
+          </Link>
+        </div>
         {popularProducts.length === 0 ? (
-          <p className="text-sm text-gray-500">Belum ada produk.</p>
+          <p className="text-sm" style={{ color: "var(--gray)" }}>
+            Belum ada produk.
+          </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {popularProducts.map((product) => (

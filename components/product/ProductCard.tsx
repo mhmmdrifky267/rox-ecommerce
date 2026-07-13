@@ -4,6 +4,8 @@
 // cuma menampilkan data. Ini membuatnya ringan: nol JavaScript dikirim
 // ke browser untuk komponen ini.
 
+// components/product/ProductCard.tsx
+
 import Link from "next/link";
 
 type ProductCardProps = {
@@ -12,7 +14,16 @@ type ProductCardProps = {
   price: number;
   imageUrl?: string;
   storeName?: string;
+  createdAt?: string | Date; // dipakai untuk badge "Baru" otomatis
 };
+
+// Produk yang dibuat dalam 7 hari terakhir otomatis dapat badge "Baru" —
+// meniru penanda "Baru"/"Sale" di mockup, tapi datanya asli (bukan hardcode).
+function isNew(createdAt?: string | Date) {
+  if (!createdAt) return false;
+  const days = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  return days <= 7;
+}
 
 export function ProductCard({
   slug,
@@ -20,39 +31,29 @@ export function ProductCard({
   price,
   imageUrl,
   storeName,
+  createdAt,
 }: ProductCardProps) {
   return (
-    <Link
-      href={`/products/${slug}`}
-      className="group block overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md active:scale-[0.98]"
-    >
-      <div className="aspect-square overflow-hidden bg-gray-100">
+    <Link href={`/products/${slug}`} className="product-card">
+      <div className="product-img">
+        {isNew(createdAt) && <span className="stamp">Baru</span>}
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt={name}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-          />
+          <img src={imageUrl} alt={name} />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-gray-400">
+          <div
+            className="flex h-full items-center justify-center text-[10px] uppercase tracking-wide"
+            style={{ color: "var(--gray)" }}
+          >
             Tidak ada gambar
           </div>
         )}
       </div>
 
-      <div className="p-2.5 sm:p-3">
-        <p className="line-clamp-2 text-xs leading-snug text-gray-700 sm:text-sm">
-          {name}
-        </p>
-        <p className="mt-1 text-sm font-bold text-gray-900 sm:text-base">
-          Rp{price.toLocaleString("id-ID")}
-        </p>
-        {storeName && (
-          <p className="mt-0.5 truncate text-[11px] text-gray-400 sm:text-xs">
-            {storeName}
-          </p>
-        )}
+      <div className="product-body">
+        {storeName && <div className="product-store">{storeName}</div>}
+        <div className="product-name">{name}</div>
+        <span className="product-price">Rp{price.toLocaleString("id-ID")}</span>
       </div>
     </Link>
   );

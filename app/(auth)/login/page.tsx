@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,9 +18,6 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    // signIn("credentials", ...) memanggil fungsi authorize() yang kita
-    // tulis di auth.ts. redirect:false artinya kita yang atur redirect manual,
-    // supaya bisa menampilkan pesan error di halaman yang sama.
     const result = await signIn("credentials", {
       email,
       password,
@@ -38,50 +36,71 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-16">
-      <h1 className="mb-6 text-2xl font-bold">Masuk</h1>
+    <div
+      className="mx-auto flex min-h-[calc(100vh-64px)] max-w-sm flex-col justify-center px-6 py-10"
+      style={{ background: "var(--canvas)" }}
+    >
+      <Link href="/" className="wordmark mb-8">
+        R.O.X.
+        <small>MARKETPLACE FASHION</small>
+      </Link>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Email</label>
+      <p className="font-display mb-1 text-[22px] font-extrabold">Masuk ke akun</p>
+      <p className="mb-6 text-[12.5px]" style={{ color: "var(--gray)" }}>
+        Belanja &amp; jual produk fashion pilihan.
+      </p>
+
+      <form onSubmit={handleSubmit}>
+        <div className="field">
+          <label>Email</label>
           <input
             type="email"
             required
+            placeholder="nama@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border px-3 py-2"
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium">Password</label>
+        <div className="field">
+          <label>Kata Sandi</label>
           <input
             type="password"
             required
+            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border px-3 py-2"
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="mb-5 flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="font-mono text-[11px]"
+            style={{ color: "var(--stamp-blue)" }}
+          >
+            Lupa sandi?
+          </Link>
+        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-black py-2 text-white disabled:opacity-50"
-        >
+        {error && (
+          <p className="mb-4 text-[12.5px]" style={{ color: "var(--stamp-red)" }}>
+            {error}
+          </p>
+        )}
+
+        <button type="submit" disabled={loading} className="btn btn-primary w-full">
           {loading ? "Memproses..." : "Masuk"}
         </button>
 
-        <div className="flex items-center justify-between text-sm">
-          <a href="/forgot-password" className="text-gray-500 hover:underline">
-            Lupa sandi?
-          </a>
-          <a href="/register" className="text-blue-600 hover:underline">
-            Belum punya akun? Daftar
-          </a>
-        </div>
+        <hr className="divider-dash" />
+
+        <p className="text-center text-[12.5px]" style={{ color: "var(--gray)" }}>
+          Belum punya akun?{" "}
+          <Link href="/register" className="font-bold" style={{ color: "var(--ink)" }}>
+            Daftar
+          </Link>
+        </p>
       </form>
     </div>
   );
