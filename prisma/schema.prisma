@@ -123,8 +123,10 @@ model Product {
   category    Category @relation(fields: [categoryId], references: [id])
   name        String
   slug        String   @unique
+  brand       String?  // opsional, dipakai untuk rekomendasi & filter brand
   description String
   price       Int      // simpan dalam rupiah (integer), hindari float untuk uang
+  discountPercent Int  @default(0) // 0 = tidak ada diskon, 1-99 = persen potongan aktif
   weight      Int      @default(500) // berat dalam GRAM — dipakai untuk hitung ongkir
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())

@@ -27,8 +27,10 @@ export async function createProduct(sellerId: string, input: ProductInput) {
       categoryId: input.categoryId,
       name: input.name,
       slug: generateSlug(input.name),
+      brand: input.brand || null,
       description: input.description,
       price: input.price,
+      discountPercent: input.discountPercent ?? 0,
       images: {
         create: input.images.map((url, index) => ({
           url,
@@ -69,8 +71,10 @@ export async function updateProduct(
     data: {
       categoryId: input.categoryId,
       name: input.name,
+      brand: input.brand || null,
       description: input.description,
       price: input.price,
+      discountPercent: input.discountPercent ?? 0,
       images: {
         create: input.images.map((url, index) => ({
           url,
@@ -121,14 +125,15 @@ export async function getSellerProducts(sellerId: string) {
 type CatalogFilters = {
   search?: string;
   categorySlug?: string;
-  sort?: "newest" | "price_asc" | "price_desc";
+  sort?: "newest" | "price_asc" | "price_desc" | "discount";
+  onlyDiscount?: boolean; // dipakai halaman "/products?promo=1"
   page?: number;
 };
 
 const PAGE_SIZE = 12;
 
 export async function getPublicProducts(filters: CatalogFilters) {
-  const { search, categorySlug, sort = "newest", page = 1 } = filters;
+  const { search, categorySlug, sort = "newest", onlyDiscount, page = 1 } = filters;
 
   // Bangun kondisi WHERE secara dinamis — cuma tambahkan filter yang
   // benar-benar diisi user, biar query tetap fleksibel.
@@ -140,6 +145,7 @@ export async function getPublicProducts(filters: CatalogFilters) {
     ...(categorySlug && {
       category: { slug: categorySlug },
     }),
+    ...(onlyDiscount && { discountPercent: { gt: 0 } }),
   };
 
   const orderBy =
@@ -147,6 +153,8 @@ export async function getPublicProducts(filters: CatalogFilters) {
       ? { price: "asc" as const }
       : sort === "price_desc"
       ? { price: "desc" as const }
+      : sort === "discount"
+      ? { discountPercent: "desc" as const }
       : { createdAt: "desc" as const };
 
   const [products, total] = await Promise.all([
@@ -168,6 +176,20 @@ export async function getPublicProducts(filters: CatalogFilters) {
     totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     currentPage: page,
   };
+}
+
+// Dipakai khusus untuk section "Promo" di homepage — 10 produk dengan
+// diskon terbesar, tanpa perlu pagination.
+export async function getPromoProducts(limit = 10) {
+  return prisma.product.findMany({
+    where: { isActive: true, discountPercent: { gt: 0 } },
+    orderBy: { discountPercent: "desc" },
+    take: limit,
+    include: {
+      images: { where: { isPrimary: true }, take: 1 },
+      seller: { select: { storeName: true } },
+    },
+  });
 }
 
 export async function getProductBySlug(slug: string) {

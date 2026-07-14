@@ -10,8 +10,15 @@ export const productVariantSchema = z.object({
 
 export const productSchema = z.object({
   name: z.string().min(3, "Nama produk minimal 3 karakter"),
+  brand: z.string().max(50).optional(),
   description: z.string().min(10, "Deskripsi minimal 10 karakter"),
   price: z.number().int().positive("Harga harus lebih dari 0"),
+  discountPercent: z
+    .number()
+    .int()
+    .min(0, "Diskon minimal 0%")
+    .max(90, "Diskon maksimal 90%")
+    .default(0),
   categoryId: z.string().min(1, "Kategori wajib dipilih"),
   images: z
     .array(z.string().url())

@@ -1,6 +1,7 @@
 // services/cart.service.ts
 
 import { prisma } from "@/lib/prisma";
+import { getEffectivePrice } from "@/lib/pricing";
 
 // Setiap user seharusnya sudah punya Cart sejak register (lihat route
 // register kita di Tahap 2). Fungsi ini jaga-jaga kalau ternyata belum ada.
@@ -30,7 +31,10 @@ export async function getCartWithDetails(userId: string) {
   });
 
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.qty * item.variant.product.price,
+    (sum, item) =>
+      sum +
+      item.qty *
+        getEffectivePrice(item.variant.product.price, item.variant.product.discountPercent),
     0
   );
   const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
@@ -145,7 +149,9 @@ export async function getCartGroupedBySeller(userId: string) {
 
     const group = groups.get(sellerId)!;
     group.items.push(item);
-    group.itemsTotal += item.variant.product.price * item.qty;
+    group.itemsTotal +=
+      getEffectivePrice(item.variant.product.price, item.variant.product.discountPercent) *
+      item.qty;
     group.totalWeight += item.variant.product.weight * item.qty;
   }
 

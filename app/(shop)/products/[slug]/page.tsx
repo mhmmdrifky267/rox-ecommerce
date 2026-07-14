@@ -15,6 +15,7 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { VariantSelector } from "@/components/product/VariantSelector";
 import { ProductCard } from "@/components/product/ProductCard";
 import { StoreSection } from "@/components/product/StoreSection";
+import { getEffectivePrice, hasActiveDiscount } from "@/lib/pricing";
 
 export default async function ProductDetailPage({
   params,
@@ -64,9 +65,21 @@ export default async function ProductDetailPage({
             </p>
           )}
 
-          <p className="mt-4 text-2xl font-semibold">
-            Rp{product.price.toLocaleString("id-ID")}
-          </p>
+          {hasActiveDiscount(product.discountPercent) ? (
+            <div className="mt-4 flex items-center gap-3">
+              <span className="product-price text-2xl" style={{ color: "var(--stamp-red)" }}>
+                Rp{getEffectivePrice(product.price, product.discountPercent).toLocaleString("id-ID")}
+              </span>
+              <span className="font-mono text-sm line-through" style={{ color: "var(--gray)" }}>
+                Rp{product.price.toLocaleString("id-ID")}
+              </span>
+              <span className="tag">-{product.discountPercent}%</span>
+            </div>
+          ) : (
+            <p className="mt-4 text-2xl font-semibold">
+              Rp{product.price.toLocaleString("id-ID")}
+            </p>
+          )}
 
           <p className="mt-4 whitespace-pre-line text-sm text-gray-700">
             {product.description}
@@ -119,6 +132,8 @@ export default async function ProductDetailPage({
                 slug={related.slug}
                 name={related.name}
                 price={related.price}
+                discountPercent={related.discountPercent}
+                createdAt={related.createdAt}
                 imageUrl={related.images[0]?.url}
               />
             ))}
@@ -137,6 +152,8 @@ export default async function ProductDetailPage({
                 slug={related.slug}
                 name={related.name}
                 price={related.price}
+                discountPercent={related.discountPercent}
+                createdAt={related.createdAt}
                 imageUrl={related.images[0]?.url}
               />
             ))}

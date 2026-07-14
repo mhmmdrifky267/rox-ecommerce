@@ -20,6 +20,7 @@ type CartItem = {
       name: string;
       slug: string;
       price: number;
+      discountPercent: number;
       images: { url: string }[];
     };
   };
@@ -64,20 +65,40 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   addItem: async (productVariantId, qty) => {
     set({ error: null });
-    const res = await fetch("/api/cart", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productVariantId, qty }),
-    });
 
-    if (!res.ok) {
-      const data = await res.json();
-      set({ error: data.error });
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productVariantId, qty }),
+      });
+
+      if (!res.ok) {
+        // Coba parse sebagai JSON, tapi kalau server balas HTML (misal
+        // halaman 404 bawaan Next.js), jangan sampai ikut melempar error
+        // yang tidak tertangkap — itu yang bikin loading nyangkut selamanya.
+        let message = `Gagal menambahkan ke keranjang (status ${res.status})`;
+        try {
+          const data = await res.json();
+          if (data?.error) message = data.error;
+        } catch {
+          // response bukan JSON, biarkan pakai pesan default di atas
+        }
+        set({ error: message });
+        return false;
+      }
+
+      await get().fetchCart();
+      return true;
+    } catch (error) {
+      // Menangkap error jaringan (misal server mati, atau fetch gagal total).
+      // Di-log ke console supaya kelihatan detail errornya saat development,
+      // tapi pesan ke user tetap generik & ramah (jangan tampilkan stack trace
+      // teknis ke pembeli awam).
+      console.error("addItem gagal:", error);
+      set({ error: "Tidak bisa terhubung ke server. Coba lagi." });
       return false;
     }
-
-    await get().fetchCart(); // sinkronkan ulang state dari server
-    return true;
   },
 
   updateQty: async (itemId, qty) => {

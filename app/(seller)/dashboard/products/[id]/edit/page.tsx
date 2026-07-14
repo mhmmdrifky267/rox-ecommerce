@@ -14,8 +14,11 @@ export default function EditProductPage() {
 
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [discountEnabled, setDiscountEnabled] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState("10");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [images, setImages] = useState<string[]>([]);
@@ -45,8 +48,11 @@ export default function EditProductPage() {
 
       const product = await res.json();
       setName(product.name);
+      setBrand(product.brand ?? "");
       setDescription(product.description);
       setPrice(String(product.price));
+      setDiscountEnabled(product.discountPercent > 0);
+      setDiscountPercent(String(product.discountPercent || 10));
       setCategoryId(product.categoryId);
       setImages(product.images.map((img: { url: string }) => img.url));
       setVariants(
@@ -94,8 +100,10 @@ export default function EditProductPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
+        brand: brand || undefined,
         description,
         price: Number(price),
+        discountPercent: discountEnabled ? Number(discountPercent) : 0,
         categoryId,
         images,
         variants,
@@ -125,7 +133,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-10">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="mb-6 text-2xl font-bold">Edit Produk</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -135,6 +143,18 @@ export default function EditProductPage() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-md border px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium">
+            Brand <span className="font-normal text-gray-400">(opsional)</span>
+          </label>
+          <input
+            placeholder="mis. Adidas, Vans, buatan sendiri..."
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
             className="w-full rounded-md border px-3 py-2"
           />
         </div>
@@ -177,6 +197,44 @@ export default function EditProductPage() {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* ---- Diskon (opsional) ---- */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-sm font-medium">Diskon Produk</label>
+            <button
+              type="button"
+              onClick={() => setDiscountEnabled((v) => !v)}
+              className={discountEnabled ? "tag tag-moss" : "tag tag-ghost"}
+            >
+              {discountEnabled ? "Diskon Aktif" : "Aktifkan Diskon"}
+            </button>
+          </div>
+
+          {discountEnabled && (
+            <div className="flex items-center gap-3 rounded-md border p-3">
+              <input
+                type="number"
+                min={1}
+                max={90}
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(e.target.value)}
+                className="w-20 rounded-md border px-3 py-2"
+              />
+              <span className="text-sm text-gray-500">
+                % potongan — harga jual jadi{" "}
+                <span className="product-price">
+                  Rp
+                  {price
+                    ? Math.round(
+                        Number(price) * (1 - Number(discountPercent || 0) / 100)
+                      ).toLocaleString("id-ID")
+                    : 0}
+                </span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ---- Gambar ---- */}

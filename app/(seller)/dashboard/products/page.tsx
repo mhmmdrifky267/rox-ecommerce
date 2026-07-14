@@ -18,20 +18,58 @@ export default async function SellerProductsPage() {
 
   const products = await getSellerProducts(session.user.sellerId);
 
+  // Ringkasan cepat, dipakai untuk "pemanis" tag di atas daftar produk —
+  // datanya asli dihitung dari produk yang ada, bukan dummy.
+  const totalProducts = products.length;
+  const onSaleCount = products.filter((p) => p.discountPercent > 0).length;
+  const lowStockCount = products.filter(
+    (p) => p.variants.reduce((sum, v) => sum + v.stock, 0) < 5
+  ).length;
+
   return (
-    <div className="mx-auto max-w-4xl py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Produk Saya</h1>
-        <Link
-          href="/dashboard/products/new"
-          className="rounded-md bg-black px-4 py-2 text-sm text-white"
-        >
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <div className="section-title">
+            <span>Produk Saya</span>
+          </div>
+          <p className="mt-1 text-[12.5px]" style={{ color: "var(--gray)" }}>
+            Kelola katalog toko kamu.
+          </p>
+        </div>
+        <Link href="/dashboard/products/new" className="btn btn-primary">
           + Tambah Produk
         </Link>
       </div>
 
+      {/* ---- Quick stats, gaya tag mono ---- */}
+      {totalProducts > 0 && (
+        <div className="mb-6 flex flex-wrap gap-2">
+          <span className="tag tag-ghost">{totalProducts} Produk</span>
+          {onSaleCount > 0 && (
+            <span className="tag tag-moss">{onSaleCount} Sedang Diskon</span>
+          )}
+          {lowStockCount > 0 && (
+            <span className="tag" style={{ background: "var(--stamp-red)" }}>
+              {lowStockCount} Stok Menipis
+            </span>
+          )}
+        </div>
+      )}
+
       {products.length === 0 ? (
-        <p className="text-gray-500">Belum ada produk. Yuk tambah yang pertama!</p>
+        <div
+          className="flex flex-col items-center gap-3 py-16 text-center"
+          style={{ border: "1px dashed var(--line)", borderRadius: "4px" }}
+        >
+          <span className="stamp">Kosong</span>
+          <p className="text-[13px]" style={{ color: "var(--gray)" }}>
+            Belum ada produk. Yuk tambah yang pertama!
+          </p>
+          <Link href="/dashboard/products/new" className="btn btn-outline mt-2">
+            + Tambah Produk
+          </Link>
+        </div>
       ) : (
         <div className="space-y-3">
           {products.map((product) => (
@@ -41,6 +79,7 @@ export default async function SellerProductsPage() {
               name={product.name}
               categoryName={product.category.name}
               price={product.price}
+              discountPercent={product.discountPercent}
               totalStock={product.variants.reduce((sum, v) => sum + v.stock, 0)}
               imageUrl={product.images[0]?.url}
             />

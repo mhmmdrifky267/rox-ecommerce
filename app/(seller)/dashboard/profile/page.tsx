@@ -73,7 +73,7 @@ export default function SellerProfilePage() {
   if (loading) return <div className="py-10 text-center">Memuat...</div>;
 
   return (
-    <div className="mx-auto max-w-xl py-10">
+    <div className="mx-auto max-w-xl px-4 py-10 sm:px-6">
       <h1 className="mb-2 text-2xl font-bold">Profil Toko</h1>
       <p className="mb-6 text-sm text-gray-500">
         Lengkapi alamat toko kamu — ini dipakai untuk menghitung ongkos

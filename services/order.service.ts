@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCartGroupedBySeller } from "./cart.service";
+import { getEffectivePrice } from "@/lib/pricing";
 
 type ShipmentSelection = {
   sellerId: string;
@@ -54,7 +55,10 @@ export async function createOrdersFromCart(
             create: group.items.map((item) => ({
               productVariantId: item.productVariantId,
               qty: item.qty,
-              priceAtOrder: item.variant.product.price,
+              priceAtOrder: getEffectivePrice(
+                item.variant.product.price,
+                item.variant.product.discountPercent
+              ),
             })),
           },
         },

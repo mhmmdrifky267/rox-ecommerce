@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart.store";
+import { getEffectivePrice } from "@/lib/pricing";
 
 export default function CartPage() {
   const router = useRouter();
@@ -22,12 +23,12 @@ export default function CartPage() {
   }, [fetchCart]);
 
   if (isLoading && items.length === 0) {
-    return <div className="mx-auto max-w-3xl py-10">Memuat keranjang...</div>;
+    return <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">Memuat keranjang...</div>;
   }
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl py-16 text-center">
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
         <p className="text-gray-500">Keranjang kamu masih kosong.</p>
         <Link href="/products" className="mt-4 inline-block text-blue-600">
           Mulai belanja →
@@ -37,7 +38,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl py-10">
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="mb-6 text-2xl font-bold">Keranjang Belanja</h1>
 
       <div className="space-y-4">
@@ -63,7 +64,16 @@ export default function CartPage() {
                   .join(" / ")}
               </p>
               <p className="mt-1 font-semibold">
-                Rp{item.variant.product.price.toLocaleString("id-ID")}
+                Rp
+                {getEffectivePrice(
+                  item.variant.product.price,
+                  item.variant.product.discountPercent
+                ).toLocaleString("id-ID")}
+                {item.variant.product.discountPercent > 0 && (
+                  <span className="ml-2 text-xs text-gray-400 line-through">
+                    Rp{item.variant.product.price.toLocaleString("id-ID")}
+                  </span>
+                )}
               </p>
 
               <div className="mt-2 flex items-center gap-3">

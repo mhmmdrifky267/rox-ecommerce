@@ -1,19 +1,16 @@
 // app/(shop)/products/page.tsx
-//
-// Kenapa filter pakai URL query params (?search=...&sort=...), bukan
-// useState di client? Karena ini Server Component — filternya diproses
-// di server, hasilnya SEO-friendly, dan usernya bisa share link hasil
-// pencarian ke orang lain (link-nya sudah "mengingat" filter yang dipilih).
 
 import { getPublicProducts } from "@/services/product.service";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/product/ProductCard";
+import { ProductFilters } from "@/components/product/ProductFilters";
 import Link from "next/link";
 
 type SearchParams = {
   search?: string;
   category?: string;
-  sort?: "newest" | "price_asc" | "price_desc";
+  sort?: "newest" | "price_asc" | "price_desc" | "discount";
+  promo?: string;
   page?: string;
 };
 
@@ -22,12 +19,14 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const params = await searchParams; // Next.js 15+: searchParams adalah Promise
+  const params = await searchParams;
+  const isPromoMode = params.promo === "1";
 
   const { products, totalPages, currentPage } = await getPublicProducts({
     search: params.search,
     categorySlug: params.category,
-    sort: params.sort,
+    sort: isPromoMode ? "discount" : params.sort,
+    onlyDiscount: isPromoMode,
     page: params.page ? Number(params.page) : 1,
   });
 
@@ -36,58 +35,25 @@ export default async function ProductsPage({
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-      <h1 className="mb-4 text-xl font-bold sm:mb-6 sm:text-2xl">Semua Produk</h1>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
+      <div className="section-title mb-4">
+        <span>{isPromoMode ? "Sedang Diskon" : "Semua Produk"}</span>
+        {isPromoMode && (
+          <Link href="/products" className="see-all">
+            Lihat Semua Produk
+          </Link>
+        )}
+      </div>
 
-      {/* Form filter — pakai GET biasa, tidak perlu JavaScript sama sekali.
-          Mobile: search full-width sendiri, kategori+sort dibagi 2 kolom sama
-          rata, tombol full-width di bawah. Desktop (sm+): semua sejajar satu baris. */}
-      <form
-        className="mb-6 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
-        action="/products"
-      >
-        <input
-          name="search"
-          defaultValue={params.search}
-          placeholder="Cari produk..."
-          className="w-full rounded-md border px-3 py-2 text-sm sm:flex-1"
-        />
-
-        <div className="grid grid-cols-2 gap-2 sm:contents">
-          <select
-            name="category"
-            defaultValue={params.category ?? ""}
-            className="w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
-          >
-            <option value="">Semua Kategori</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="sort"
-            defaultValue={params.sort ?? "newest"}
-            className="w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
-          >
-            <option value="newest">Terbaru</option>
-            <option value="price_asc">Harga Terendah</option>
-            <option value="price_desc">Harga Tertinggi</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full rounded-md bg-black px-4 py-2 text-sm font-medium text-white sm:w-auto"
-        >
-          Terapkan
-        </button>
-      </form>
+      <ProductFilters
+        key={`${params.search ?? ""}-${params.category ?? ""}-${params.sort ?? ""}-${params.promo ?? ""}`}
+        categories={categories}
+      />
 
       {products.length === 0 ? (
-        <p className="text-sm text-gray-500">Tidak ada produk yang cocok.</p>
+        <p className="text-sm" style={{ color: "var(--gray)" }}>
+          Tidak ada produk yang cocok.
+        </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {products.map((product) => (
@@ -96,6 +62,8 @@ export default async function ProductsPage({
               slug={product.slug}
               name={product.name}
               price={product.price}
+              discountPercent={product.discountPercent}
+              createdAt={product.createdAt}
               imageUrl={product.images[0]?.url}
               storeName={product.seller.storeName}
             />
@@ -113,9 +81,12 @@ export default async function ProductsPage({
                 pathname: "/products",
                 query: { ...params, page: p },
               }}
-              className={`rounded-md border px-3 py-1 text-sm ${
-                p === currentPage ? "bg-black text-white" : ""
-              }`}
+              className="tag"
+              style={{
+                background: p === currentPage ? "var(--ink)" : "transparent",
+                color: p === currentPage ? "#fff" : "var(--ink)",
+                border: p === currentPage ? "none" : "1px dashed var(--line)",
+              }}
             >
               {p}
             </Link>

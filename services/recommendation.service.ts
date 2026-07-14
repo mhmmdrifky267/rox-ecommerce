@@ -135,3 +135,91 @@ export async function getPopularProducts(limit = 8) {
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 }
+
+// ==================== REKOMENDASI PERSONAL ====================
+//
+// Baca pola perilaku user dari riwayat ProductView (30 lihat terakhir):
+// cari kategori dan brand yang paling SERING dia lihat, lalu cari produk
+// lain yang cocok dengan pola itu. Brand dianggap "pola nyata" kalau
+// muncul minimal 2x (bukan cuma kebetulan lihat sekali).
+//
+// Prioritas hasil: kecocokan BRAND dulu (paling spesifik), baru diisi
+// sisanya dari kecocokan KATEGORI saja.
+export async function getPersonalizedRecommendations(userId: string, limit = 10) {
+  const recentViews = await prisma.productView.findMany({
+    where: { userId },
+    orderBy: { viewedAt: "desc" },
+    take: 30,
+    select: {
+      productId: true,
+      product: { select: { categoryId: true, brand: true } },
+    },
+  });
+
+  if (recentViews.length === 0) {
+    return { products: [], basisLabel: null as string | null };
+  }
+
+  const categoryCount = new Map<string, number>();
+  const brandCount = new Map<string, number>();
+  const viewedProductIds = recentViews.map((v) => v.productId);
+
+  for (const view of recentViews) {
+    const { categoryId, brand } = view.product;
+    categoryCount.set(categoryId, (categoryCount.get(categoryId) ?? 0) + 1);
+    if (brand) brandCount.set(brand, (brandCount.get(brand) ?? 0) + 1);
+  }
+
+  const topCategoryId = [...categoryCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (!topCategoryId) return { products: [], basisLabel: null };
+
+  const topBrandEntry = [...brandCount.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topBrand = topBrandEntry && topBrandEntry[1] >= 2 ? topBrandEntry[0] : undefined;
+
+  const productInclude = {
+    images: { where: { isPrimary: true }, take: 1 },
+    seller: { select: { storeName: true } },
+  } as const;
+
+  const brandMatches = topBrand
+    ? await prisma.product.findMany({
+        where: {
+          brand: topBrand,
+          isActive: true,
+          id: { notIn: viewedProductIds },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        include: productInclude,
+      })
+    : [];
+
+  const remaining = limit - brandMatches.length;
+  const categoryMatches =
+    remaining > 0
+      ? await prisma.product.findMany({
+          where: {
+            categoryId: topCategoryId,
+            isActive: true,
+            id: { notIn: [...viewedProductIds, ...brandMatches.map((p) => p.id)] },
+          },
+          orderBy: { createdAt: "desc" },
+          take: remaining,
+          include: productInclude,
+        })
+      : [];
+
+  const products = [...brandMatches, ...categoryMatches];
+  if (products.length === 0) return { products: [], basisLabel: null };
+
+  const category = await prisma.category.findUnique({
+    where: { id: topCategoryId },
+    select: { name: true },
+  });
+
+  const basisLabel = topBrand
+    ? `Karena kamu sering lihat ${topBrand} · ${category?.name ?? ""}`
+    : `Karena kamu sering lihat ${category?.name ?? "produk ini"}`;
+
+  return { products, basisLabel };
+}

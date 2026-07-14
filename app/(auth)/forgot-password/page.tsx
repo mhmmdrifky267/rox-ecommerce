@@ -6,7 +6,7 @@
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="mx-auto max-w-sm py-16 text-center">
+    <div className="mx-auto max-w-sm px-4 py-16 text-center sm:px-6">
       <h1 className="mb-2 text-2xl font-bold">Lupa Sandi</h1>
       <p className="text-sm text-gray-500">
         Fitur reset password lewat email masih dalam pengembangan. Untuk

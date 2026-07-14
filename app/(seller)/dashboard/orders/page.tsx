@@ -63,7 +63,11 @@ export default function SellerOrdersPage() {
   }
 
   useEffect(() => {
-     // eslint-disable-next-line react-hooks/set-state-in-effect
+    // loadOrders() memanggil setOrders/setLoading, tapi itu terjadi SETELAH
+    // "await fetch(...)" selesai (asinkron) — bukan langsung sinkron di
+    // body effect. Ini pola standar "fetch data saat komponen dimuat" yang
+    // direkomendasikan React sendiri; rule ini agak agresif mendeteksinya.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadOrders();
   }, []);
 
@@ -87,7 +91,7 @@ export default function SellerOrdersPage() {
   if (loading) return <div className="py-10 text-center">Memuat pesanan...</div>;
 
   return (
-    <div className="mx-auto max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <h1 className="mb-6 text-2xl font-bold">Pesanan Masuk</h1>
 
       {orders.length === 0 ? (
